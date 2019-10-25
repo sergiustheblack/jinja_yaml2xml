@@ -41,3 +41,42 @@ sample:
     <value>click</value>
 </sample>
 ```
+Lists can be a bit ugly:
+```
+   <zookeeper>
+       <node index="1">
+           <host>zk1.example.com</host>
+           <port>2181</port>
+       </node>
+       <node index="2">
+           <host>zk2.example.com</host>
+           <port>2181</port>
+       </node>
+       <node index="3">
+           <host>zk3.example.com</host>
+       </node>
+       <node index="4">
+           <host>zk4.example.com</host>
+           <port>2181</port>
+       </node>
+     </zookeeper>
+```
+```
+zookeeper:
+  node:
+    - xmlattributes:
+        index: 1
+      host: zk1.example.com
+      port: 2181
+    - xmlattributes:
+        index: 2
+      host: zk2.example.com
+      port: 2181
+    - xmlattributes:
+        index: 3
+      host: zk3.example.com
+    - xmlattributes:
+        index: 4
+      host: zk4.example.com
+      port: 2181
+```
