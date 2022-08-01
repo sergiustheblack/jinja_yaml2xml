@@ -4,22 +4,15 @@ Converts YAML to XML using Jinja 2
 Made for use with [saltstack formula for clickhouse](https://github.com/sergiustheblack/clickhouse-saltstack-formula)
 
 ## Usage
-All parameters in YAML will be converted to XML as is.
-Except "xmlattributes" and "value", which used in a special way. For example:
-
+All parameters in YAML will be converted to XML as is. To indicate xml attributes use "@"-prefixed keys.
 ```
 compression:
-  xmlattributes:
-    incl: clickhouse_compression
-    replace: replace
+  "@incl": clickhouse_compression
+  "@replace": replace
   case:
     min_part_size: 10000000000
     min_part_size_ratio: 0.01
     method: zstd
-interserver_http_port:
-  xmlattributes:
-    incl: http
-  value: 9009
 ```
 Will be expanded to
 ```
@@ -30,18 +23,23 @@ Will be expanded to
         <method>zstd</method>
     </case>
 </compression>
-<interserver_http_port incl="http">9009</interserver_http_port>
 ```
-But without xmlattributes
+Simple key-value pairs with xml attributes are not so simple and should be assigned with lists.
 ```
 sample:
   value: click
 
+interserver_http_port:
+  - "@incl": http
+  - 9009
+
 <sample>
     <value>click</value>
 </sample>
+
+<interserver_http_port incl="http">9009</interserver_http_port>
 ```
-Lists can be a bit ugly:
+Lists are exteremely ugly (thanks, Clickhouse's native YAML processor)
 ```
    <zookeeper>
        <node index="1">
@@ -59,24 +57,43 @@ Lists can be a bit ugly:
            <host>zk4.example.com</host>
            <port>2181</port>
        </node>
-     </zookeeper>
+   </zookeeper>
 ```
 ```
-zookeeper:
-  node:
-    - xmlattributes:
-        index: 1
-      host: zk1.example.com
-      port: 2181
-    - xmlattributes:
-        index: 2
-      host: zk2.example.com
-      port: 2181
-    - xmlattributes:
-        index: 3
-      host: zk3.example.com
-    - xmlattributes:
-        index: 4
-      host: zk4.example.com
-      port: 2181
+  zookeeper:
+    node:
+    - - "@index": 1
+      - host: zk1.example.com
+      - port: 2181
+    - - "@index": 2
+      - host: zk2.example.com
+      - port: 2181
+    - - "@index": 3
+      - host: zk3.example.com
+      - port: 2181
+```
+And the most head-breaking example:
+```
+  remote_servers:
+    "@replace": replace
+    clickhouse_cluster01:
+      shard:
+      - - internal_replication: true
+        - replica:
+            host: 192.168.0.1
+            port: 9440
+            secure: true
+        - replica:
+            host: 192.168.0.2
+            port: 9440
+            secure: true
+      - - internal_replication: true
+        - replica:
+            host: 192.168.0.3
+            port: 9440
+            secure: true
+        - replica:
+            host: 192.168.0.4
+            port: 9440
+            secure: true
 ```
